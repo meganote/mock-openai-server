@@ -15,7 +15,7 @@ modelConfigs:
   chat:
     models:
       chatgpt-4o-latest:
-        maxTokens: 4096
+        maxTokens: 1050000
       model-2:
         maxTokens: 8192
       gpt-4o:
