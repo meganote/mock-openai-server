@@ -98,6 +98,7 @@ function processContentOrToolCalls(contentOrToolCalls, stopSequences, maxTokens,
     let completionTokens = 0;
     let errorCode = null;
     let errorMessage = null;
+    let maxTokensReached = false;
 
     if(('tool_calls' in contentOrToolCalls) && contentOrToolCalls['tool_calls'] != null && contentOrToolCalls['tool_calls'].length > 0) {
         const allArgs = contentOrToolCalls['tool_calls'].map(tc => tc.arguments);
@@ -110,7 +111,6 @@ function processContentOrToolCalls(contentOrToolCalls, stopSequences, maxTokens,
         }
     } else {
         let contentBefore = contentOrToolCalls['content'];
-        let maxTokensReached = false;
 
         if(maxTokens && contentBefore.length > maxTokens) {
             maxTokensReached = true;
