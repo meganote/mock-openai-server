@@ -110,15 +110,20 @@ function processContentOrToolCalls(contentOrToolCalls, stopSequences, maxTokens,
         }
     } else {
         let contentBefore = contentOrToolCalls['content'];
+        let maxTokensReached = false;
+
+        if(maxTokens && contentBefore.length > maxTokens) {
+            maxTokensReached = true;
+        }
 
         contentOrToolCalls['content'] = updateContent(contentOrToolCalls['content'], stopSequences, maxTokens, frequencyPenalty, presencePenalty)
         completionTokens += contentOrToolCalls['content'].length;
 
-        finishReason = contentBefore.length != contentOrToolCalls['content'].length ? 'length' : 'stop';
+        finishReason = maxTokensReached ? 'length' : 'stop';
     }
 
     return {
-        contentOrToolCalls, finishReason, completionTokens, errorCode, errorMessage
+        contentOrToolCalls, finishReason, completionTokens, errorCode, errorMessage, maxTokensReached
     }
 }
 
