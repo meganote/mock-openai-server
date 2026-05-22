@@ -87,6 +87,54 @@ app.post('/v1/chat/completions', (req, res) => {
         res.sendStatus(401);
     }
 
+    if(req.headers['x-mock-response-504']) {
+        const delayMs = parseInt(req.headers['x-mock-delay'], 10) || 30000;
+        setTimeout(() => {
+            res.status(504).json({
+                error: {
+                    message: 'Gateway Timeout',
+                    type: 'gateway_timeout',
+                    param: null,
+                    code: '504'
+                }
+            });
+        }, delayMs);
+        return;
+    }
+
+    if(req.headers['x-mock-response-502']) {
+        return res.status(502).json({
+            error: {
+                message: 'Bad Gateway',
+                type: 'bad_gateway',
+                param: null,
+                code: '502'
+            }
+        });
+    }
+
+    if(req.headers['x-mock-response-500']) {
+        return res.status(500).json({
+            error: {
+                message: 'Internal Server Error',
+                type: 'server_error',
+                param: null,
+                code: '500'
+            }
+        });
+    }
+
+    if(req.headers['x-mock-response-400']) {
+        return res.status(400).json({
+            error: {
+                message: 'Bad Request',
+                type: 'invalid_request_error',
+                param: null,
+                code: '400'
+            }
+        });
+    }
+
     let { model, messages, tools, tool_choice: toolChoice, stream, stream_options: streamOptions, max_tokens: maxTokensOld, max_completion_tokens: maxTokensNew, temperature, stop: stopSequences, top_p: topP, n: numGenerations, user, frequency_penalty: frequencyPenalty, presence_penalty: presencePenalty, response_format: responseFormat } = req.body;
 
     const maxTokens = maxTokensNew || maxTokensOld;
