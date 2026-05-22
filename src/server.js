@@ -87,55 +87,30 @@ app.post('/v1/chat/completions', (req, res) => {
         res.sendStatus(401);
     }
 
-    if(req.headers['x-mock-response-504']) {
-        const delayMs = parseInt(req.headers['x-mock-delay'], 10) || 30000;
-        setTimeout(() => {
-            res.status(504).json({
-                error: {
-                    message: 'Gateway Timeout',
-                    type: 'gateway_timeout',
-                    param: null,
-                    code: '504'
-                }
-            });
-        }, delayMs);
-        return;
-    }
-
-    if(req.headers['x-mock-response-502']) {
-        return res.status(502).json({
-            error: {
-                message: 'Bad Gateway',
-                type: 'bad_gateway',
-                param: null,
-                code: '502'
-            }
-        });
-    }
-
-    if(req.headers['x-mock-response-500']) {
-        return res.status(500).json({
-            error: {
-                message: 'Internal Server Error',
-                type: 'server_error',
-                param: null,
-                code: '500'
-            }
-        });
-    }
-
-    if(req.headers['x-mock-response-400']) {
-        return res.status(400).json({
-            error: {
-                message: 'Bad Request',
-                type: 'invalid_request_error',
-                param: null,
-                code: '400'
-            }
-        });
-    }
-
     let { model, messages, tools, tool_choice: toolChoice, stream, stream_options: streamOptions, max_tokens: maxTokensOld, max_completion_tokens: maxTokensNew, temperature, stop: stopSequences, top_p: topP, n: numGenerations, user, frequency_penalty: frequencyPenalty, presence_penalty: presencePenalty, response_format: responseFormat } = req.body;
+
+    // Mock error responses via model name: model-400, model-500, model-502, model-504
+    const mockMatch = model?.match(/^model-(\d{3})$/);
+    if(mockMatch) {
+        const mockStatus = parseInt(mockMatch[1], 10);
+        const delayMs = parseInt(req.headers?.['x-mock-delay'], 10) || 30000;
+        const errorMap = {
+            400: { message: 'Bad Request', type: 'invalid_request_error', code: '400' },
+            500: { message: 'Internal Server Error', type: 'server_error', code: '500' },
+            502: { message: 'Bad Gateway', type: 'bad_gateway', code: '502' },
+            504: { message: 'Gateway Timeout', type: 'gateway_timeout', code: '504' },
+        };
+        const err = errorMap[mockStatus];
+        if(err) {
+            const send = () => res.status(mockStatus).json({ error: { ...err, param: null } });
+            if(mockStatus === 504) {
+                setTimeout(send, delayMs);
+            } else {
+                send();
+            }
+            return;
+        }
+    }
 
     const maxTokens = maxTokensNew || maxTokensOld;
     const {
