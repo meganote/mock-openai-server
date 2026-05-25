@@ -89,27 +89,37 @@ app.post('/v1/chat/completions', (req, res) => {
 
     let { model, messages, tools, tool_choice: toolChoice, stream, stream_options: streamOptions, max_tokens: maxTokensOld, max_completion_tokens: maxTokensNew, temperature, stop: stopSequences, top_p: topP, n: numGenerations, user, frequency_penalty: frequencyPenalty, presence_penalty: presencePenalty, response_format: responseFormat } = req.body;
 
-    // Mock error responses via model name: model-400, model-500, model-502, model-504
-    const mockMatch = model?.match(/^model-(\d{3})$/);
-    if(mockMatch) {
-        const mockStatus = parseInt(mockMatch[1], 10);
+    // Mock error responses via model name: model-5xx randomly returns 500, 502, or 504
+    if(model === 'model-5xx') {
         const delayMs = parseInt(req.headers?.['x-mock-delay'], 10) || 30000;
+        const statuses = [500, 502, 504];
+        const mockStatus = statuses[Math.floor(Math.random() * statuses.length)];
         const errorMap = {
-            400: { message: 'Bad Request', type: 'invalid_request_error', code: '400' },
             500: { message: 'Internal Server Error', type: 'server_error', code: '500' },
             502: { message: 'Bad Gateway', type: 'bad_gateway', code: '502' },
             504: { message: 'Gateway Timeout', type: 'gateway_timeout', code: '504' },
         };
         const err = errorMap[mockStatus];
-        if(err) {
-            const send = () => res.status(mockStatus).json({ error: { ...err, param: null } });
+        const send = () => {
             if(mockStatus === 504) {
-                setTimeout(send, delayMs);
+                res.status(504).type('html').send(`<html>
+<head><title>504 Gateway Time-out</title></head>
+<body>
+<center><h1>504 Gateway Time-out</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+`);
             } else {
-                send();
+                res.status(mockStatus).json({ error: { ...err, param: null } });
             }
-            return;
+        };
+        if(mockStatus === 504) {
+            setTimeout(send, delayMs);
+        } else {
+            send();
         }
+        return;
     }
 
     const maxTokens = maxTokensNew || maxTokensOld;
