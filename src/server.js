@@ -89,14 +89,16 @@ app.post('/v1/chat/completions', (req, res) => {
 
     let { model, messages, tools, tool_choice: toolChoice, stream, stream_options: streamOptions, max_tokens: maxTokensOld, max_completion_tokens: maxTokensNew, temperature, stop: stopSequences, top_p: topP, n: numGenerations, user, frequency_penalty: frequencyPenalty, presence_penalty: presencePenalty, response_format: responseFormat } = req.body;
 
-    // Mock error responses via model name: model-5xx randomly returns 500, 502, or 504
-    if(model === 'model-5xx') {
+    // Mock error responses via X-Mock-5xx header: randomly returns 500, 502, or 504
+    if(req.headers?.['x-mock-5xx']) {
         const delayMs = parseInt(req.headers?.['x-mock-delay'], 10) || 30000;
-        const statuses = [500, 502, 504];
+        const statuses = [500, 501, 502, 503, 504];
         const mockStatus = statuses[Math.floor(Math.random() * statuses.length)];
         const errorMap = {
             500: { message: 'Internal Server Error', type: 'server_error', code: '500' },
+            501: { message: 'Not Implemented', type: 'not_implemented', code: '501' },
             502: { message: 'Bad Gateway', type: 'bad_gateway', code: '502' },
+            503: { message: 'Service Unavailable', type: 'service_unavailable', code: '503' },
             504: { message: 'Gateway Timeout', type: 'gateway_timeout', code: '504' },
         };
         const err = errorMap[mockStatus];
