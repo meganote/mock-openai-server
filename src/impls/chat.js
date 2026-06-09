@@ -260,7 +260,7 @@ function streamResponse({ model, messages, tools, toolChoice, maxTokens, tempera
         }
 
         chunkIndex++;
-        setTimeout(sendData, 100);
+        setTimeout(sendData, 10);
     };
 
     sendData();
