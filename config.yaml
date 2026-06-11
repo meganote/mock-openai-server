@@ -9,8 +9,8 @@ apiKeys:
 organizationName: "my sample org"
 responseDelay:
   enable: true
-  minDelayMs: 500
-  maxDelayMs: 5000
+  minDelayMs: 100
+  maxDelayMs: 300
 modelConfigs:
   chat:
     models:
