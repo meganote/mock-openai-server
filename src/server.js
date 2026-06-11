@@ -54,7 +54,7 @@ function delayMiddleware(delayMs) {
 }
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
 
 if(config.responseDelay.enable) {
     const chosenDelay = getRandomDivisibleBy(config.responseDelay.minDelayMs, config.responseDelay.maxDelayMs, 1);
